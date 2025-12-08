@@ -48,12 +48,16 @@ void xor_section ( MEMORY_SECTION * section, BOOL mask )
 
     if ( mask == FALSE && section->CurrentProtect != section->PreviousProtect )
     {
-        DWORD old_protect = 0;
+        DWORD old_protect_1 = 0;
+        DWORD old_protect_2   = 0;
 
-        if ( KERNEL32$VirtualProtect ( section->BaseAddress, section->Size, section->PreviousProtect, &old_protect ) )
+        // Protect as READONLY and then restore original protection. This avoids: RX -> RW -> RX -> ... flipping.
+
+        KERNEL32$VirtualProtect ( section->BaseAddress, section->Size, PAGE_READONLY, &old_protect_1 );
+        if ( KERNEL32$VirtualProtect ( section->BaseAddress, section->Size, section->PreviousProtect, &old_protect_2 ) )
         {
             section->CurrentProtect  = section->PreviousProtect;
-            section->PreviousProtect = old_protect;
+            section->PreviousProtect = old_protect_1;
         }
     }
 }
