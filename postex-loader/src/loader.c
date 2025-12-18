@@ -45,7 +45,7 @@ void fix_section_permissions ( DLLDATA * dll, char * src, char * dst, MEMORY_REG
         if ( section_hdr->Characteristics & IMAGE_SCN_MEM_EXECUTE ) {
             new_protect = PAGE_EXECUTE;
         }
-        if ( ( section_hdr->Characteristics & IMAGE_SCN_MEM_EXECUTE ) && ( section_hdr->Characteristics & IMAGE_SCN_MEM_READ ) ) {
+        if ( ( section_hdr->Characteristics & IMAGE_SCN_MEM_EXECUTE ) && ( section_hdr->Characteristics & IMAGE_SCN_MEM_WRITE ) ) {
             new_protect = PAGE_EXECUTE_WRITECOPY;
         }
         if ( ( section_hdr->Characteristics & IMAGE_SCN_MEM_EXECUTE ) && ( section_hdr->Characteristics & IMAGE_SCN_MEM_READ ) ) {
