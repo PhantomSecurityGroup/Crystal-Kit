@@ -45,6 +45,7 @@ x64:
         addhook "KERNEL32$CreateThread"       "_CreateThread"
         addhook "KERNEL32$DuplicateHandle"    "_DuplicateHandle"
         addhook "KERNEL32$ExitThread"         "_ExitThread"
+        addhook "KERNEL32$GetProcAddress"     "_GetProcAddress"
         addhook "KERNEL32$GetThreadContext"   "_GetThreadContext"
         addhook "KERNEL32$LoadLibraryA"       "_LoadLibraryA"
         addhook "KERNEL32$MapViewOfFile"      "_MapViewOfFile"
