@@ -11,7 +11,6 @@ DECLSPEC_IMPORT LPVOID WINAPI KERNEL32$HeapAlloc             ( HANDLE, DWORD, SI
 DECLSPEC_IMPORT VOID   WINAPI KERNEL32$RtlCaptureContext     ( PCONTEXT );
 DECLSPEC_IMPORT VOID   WINAPI KERNEL32$Sleep                 ( DWORD );
 DECLSPEC_IMPORT BOOL   WINAPI KERNEL32$VirtualFree           ( LPVOID, SIZE_T, DWORD );
-
 DECLSPEC_IMPORT ULONG  NTAPI  NTDLL$NtContinue               ( CONTEXT *, BOOLEAN );
 
 #define memcpy(x, y, z) __movsb ( ( unsigned char * ) x, ( unsigned char * ) y, z );

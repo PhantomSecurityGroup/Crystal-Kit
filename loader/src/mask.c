@@ -1,8 +1,6 @@
 #include <windows.h>
 #include "memory.h"
-#include "spoof.h"
 
-DECLSPEC_IMPORT VOID WINAPI KERNEL32$Sleep          ( DWORD );
 DECLSPEC_IMPORT BOOL WINAPI KERNEL32$VirtualProtect ( LPVOID, SIZE_T, DWORD, PDWORD );
 
 char xorkey [ 128 ] = { 1 };

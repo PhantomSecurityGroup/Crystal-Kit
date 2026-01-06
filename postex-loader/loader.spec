@@ -23,11 +23,10 @@ x64:
         link "draugr_stub"
 
     # hook functions that the loader uses
-    attach "KERNEL32$LoadLibraryA"    "_LoadLibraryA"
-    attach "KERNEL32$VirtualAlloc"    "_VirtualAlloc"
-    attach "KERNEL32$VirtualProtect"  "_VirtualProtect"
-    attach "KERNEL32$VirtualFree"     "_VirtualFree"
-
+    attach "KERNEL32$LoadLibraryA"   "_LoadLibraryA"
+    attach "KERNEL32$VirtualAlloc"   "_VirtualAlloc"
+    attach "KERNEL32$VirtualProtect" "_VirtualProtect"
+    attach "KERNEL32$VirtualFree"    "_VirtualFree"
     preserve "KERNEL32$LoadLibraryA" "init_frame_info"
 
     # mask & link the dll

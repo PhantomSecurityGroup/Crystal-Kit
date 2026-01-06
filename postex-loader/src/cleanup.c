@@ -1,7 +1,6 @@
 #include <windows.h>
 #include "memory.h"
 #include "cfg.h"
-#include "spoof.h"
 #include "tcg.h"
 
 DECLSPEC_IMPORT HANDLE WINAPI KERNEL32$CreateTimerQueue      ( );
@@ -12,7 +11,6 @@ DECLSPEC_IMPORT LPVOID WINAPI KERNEL32$HeapAlloc             ( HANDLE, DWORD, SI
 DECLSPEC_IMPORT VOID   WINAPI KERNEL32$RtlCaptureContext     ( PCONTEXT );
 DECLSPEC_IMPORT VOID   WINAPI KERNEL32$Sleep                 ( DWORD );
 DECLSPEC_IMPORT BOOL   WINAPI KERNEL32$VirtualFree           ( LPVOID, SIZE_T, DWORD );
-
 DECLSPEC_IMPORT ULONG  NTAPI  NTDLL$NtContinue               ( CONTEXT *, BOOLEAN );
 
 #define memcpy(x, y, z) __movsb ( ( unsigned char * ) x, ( unsigned char * ) y, z );
@@ -80,9 +78,6 @@ void cleanup_memory ( MEMORY_LAYOUT * memory )
             ctx_free[ 1 ].Rcx = ( DWORD64 ) ( memory->Pico.BaseAddress );
             ctx_free[ 1 ].Rdx = ( DWORD64 ) ( 0 );
             ctx_free[ 1 ].R8  = ( DWORD64 ) ( MEM_RELEASE );
-
-            dprintf("dll @ 0x%p\n", memory->Dll.BaseAddress);
-            dprintf("pico @ 0x%p\n", memory->Pico.BaseAddress);
 
             /* give a decent delay so ExitThread has time to be called */
             KERNEL32$CreateTimerQueueTimer ( &timer, timer_queue, ( WAITORTIMERCALLBACK ) ( NTDLL$NtContinue ), &ctx_free [ 0 ], 500, 0, WT_EXECUTEINTIMERTHREAD );
