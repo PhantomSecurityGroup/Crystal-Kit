@@ -1,3 +1,5 @@
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #include <windows.h>
 #include <winldap.h>
 #include <wininet.h>
@@ -35,6 +37,17 @@ DECLSPEC_IMPORT HRESULT   WINAPI OLE32$CoCreateInstance      ( REFCLSID, LPUNKNO
 DECLSPEC_IMPORT ULONG     NTAPI  NTDLL$NtContinue            ( CONTEXT *, BOOLEAN );
 
 DECLSPEC_IMPORT ULONG LDAPAPI WLDAP32$ldap_bind_s ( LDAP *, const PSTR, const PCHAR, ULONG );
+
+DECLSPEC_IMPORT int       WSAAPI WS2_32$bind ( SOCKET, const struct sockaddr *, int );
+DECLSPEC_IMPORT int       WSAAPI WS2_32$closesocket ( SOCKET );
+DECLSPEC_IMPORT int       WSAAPI WS2_32$connect ( SOCKET, const struct sockaddr *, int );
+DECLSPEC_IMPORT int       WSAAPI WS2_32$getaddrinfo ( const char *, const char *, const struct addrinfo *, struct addrinfo ** );
+DECLSPEC_IMPORT int       WSAAPI WS2_32$ioctlsocket ( SOCKET, long, u_long * );
+DECLSPEC_IMPORT int       WSAAPI WS2_32$listen ( SOCKET, int );
+DECLSPEC_IMPORT int       WSAAPI WS2_32$select ( int, fd_set *, fd_set *, fd_set *, const struct timeval * );
+DECLSPEC_IMPORT int       WSAAPI WS2_32$send ( SOCKET, const char *, int, int );
+DECLSPEC_IMPORT SOCKET    WSAAPI WS2_32$socket ( int, int, int );
+DECLSPEC_IMPORT unsigned long WSAAPI WSOCK32$inet_addr ( const char * );
 
 HINTERNET WINAPI _InternetOpenA ( LPCSTR lpszAgent, DWORD dwAccessType, LPCSTR lpszProxy, LPCSTR lpszProxyBypass, DWORD dwFlags )
 {
@@ -428,4 +441,134 @@ ULONG LDAPAPI _ldap_bind_s ( LDAP * ld, const PSTR dn, const PCHAR cred, ULONG m
     call.args [ 3 ] = spoof_arg ( method );
 
     return ( ULONG ) spoof_call ( &call );
+}
+
+// WS2_32 and WSOCK32 hooks
+int WSAAPI _bind ( SOCKET s, const struct sockaddr * name, int namelen )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WS2_32$bind );
+    call.argc       = 3;
+    call.args [ 0 ] = spoof_arg ( s );
+    call.args [ 1 ] = spoof_arg ( name );
+    call.args [ 2 ] = spoof_arg ( namelen );
+
+    return ( int ) spoof_call ( &call );
+}
+
+int WSAAPI _closesocket ( SOCKET s )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WS2_32$closesocket );
+    call.argc       = 1;
+    call.args [ 0 ] = spoof_arg ( s );
+
+    return ( int ) spoof_call ( &call );
+}
+
+int WSAAPI _listen ( SOCKET s, int backlog )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WS2_32$listen );
+    call.argc       = 2;
+    call.args [ 0 ] = spoof_arg ( s );
+    call.args [ 1 ] = spoof_arg ( backlog );
+
+    return ( int ) spoof_call ( &call );
+}
+
+int WSAAPI _send ( SOCKET s, const char * buf, int len, int flags )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WS2_32$send );
+    call.argc       = 4;
+    call.args [ 0 ] = spoof_arg ( s );
+    call.args [ 1 ] = spoof_arg ( buf );
+    call.args [ 2 ] = spoof_arg ( len );
+    call.args [ 3 ] = spoof_arg ( flags );
+
+    return ( int ) spoof_call ( &call );
+}
+
+SOCKET WSAAPI _socket ( int af, int type, int protocol )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WS2_32$socket );
+    call.argc       = 3;
+    call.args [ 0 ] = spoof_arg ( af );
+    call.args [ 1 ] = spoof_arg ( type );
+    call.args [ 2 ] = spoof_arg ( protocol );
+
+    return ( SOCKET ) spoof_call ( &call );
+}
+
+unsigned long WSAAPI _inet_addr ( const char * cp )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WSOCK32$inet_addr );
+    call.argc       = 1;
+    call.args [ 0 ] = spoof_arg ( cp );
+
+    return ( unsigned long ) spoof_call ( &call );
+}
+
+int WSAAPI _connect ( SOCKET s, const struct sockaddr * name, int namelen )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WS2_32$connect );
+    call.argc       = 3;
+    call.args [ 0 ] = spoof_arg ( s );
+    call.args [ 1 ] = spoof_arg ( name );
+    call.args [ 2 ] = spoof_arg ( namelen );
+
+    return ( int ) spoof_call ( &call );
+}
+
+int WSAAPI _getaddrinfo ( const char * nodename, const char * servname, const struct addrinfo * hints, struct addrinfo ** res )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WS2_32$getaddrinfo );
+    call.argc       = 4;
+    call.args [ 0 ] = spoof_arg ( nodename );
+    call.args [ 1 ] = spoof_arg ( servname );
+    call.args [ 2 ] = spoof_arg ( hints );
+    call.args [ 3 ] = spoof_arg ( res );
+
+    return ( int ) spoof_call ( &call );
+}
+
+int WSAAPI _ioctlsocket ( SOCKET s, long cmd, u_long * argp )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WS2_32$ioctlsocket );
+    call.argc       = 3;
+    call.args [ 0 ] = spoof_arg ( s );
+    call.args [ 1 ] = spoof_arg ( cmd );
+    call.args [ 2 ] = spoof_arg ( argp );
+
+    return ( int ) spoof_call ( &call );
+}
+
+int WSAAPI _select ( int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, const struct timeval * timeout )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WS2_32$select );
+    call.argc       = 5;
+    call.args [ 0 ] = spoof_arg ( nfds );
+    call.args [ 1 ] = spoof_arg ( readfds );
+    call.args [ 2 ] = spoof_arg ( writefds );
+    call.args [ 3 ] = spoof_arg ( exceptfds );
+    call.args [ 4 ] = spoof_arg ( timeout );
+
+    return ( int ) spoof_call ( &call );
 }

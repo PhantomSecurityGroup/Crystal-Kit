@@ -66,6 +66,16 @@ x64:
 
     # Custom adds
     addhook "WLDAP32$ldap_bind_s"     "_ldap_bind_s"
+    addhook "WS2_32$bind"                                                   "_bind"
+    addhook "WS2_32$closesocket"                                            "_closesocket"
+    addhook "WS2_32$connect"                                                "_connect"
+    addhook "WS2_32$getaddrinfo"                                            "_getaddrinfo"
+    addhook "WS2_32$ioctlsocket"                                            "_ioctlsocket"
+    addhook "WS2_32$listen"                                                 "_listen"
+    addhook "WS2_32$select"                                                 "_select"
+    addhook "WS2_32$send"                                                   "_send"
+    addhook "WS2_32$socket"                                                 "_socket"
+    addhook "WSOCK32$inet_addr"                                             "_inet_addr"
 
     # hook functions in pico
     attach "KERNEL32$VirtualProtect" "_VirtualProtect"  # this is needed to hook VirtualProtect in mask.c

