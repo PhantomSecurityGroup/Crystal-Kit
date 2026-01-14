@@ -37,6 +37,20 @@ DECLSPEC_IMPORT HRESULT   WINAPI OLE32$CoCreateInstance      ( REFCLSID, LPUNKNO
 DECLSPEC_IMPORT ULONG     NTAPI  NTDLL$NtContinue            ( CONTEXT *, BOOLEAN );
 
 DECLSPEC_IMPORT ULONG LDAPAPI WLDAP32$ldap_bind_s ( LDAP *, const PSTR, const PCHAR, ULONG );
+DECLSPEC_IMPORT void      LDAPAPI WLDAP32$ber_free ( BerElement *, int );
+DECLSPEC_IMPORT ULONG     LDAPAPI WLDAP32$ldap_count_entries ( LDAP *, LDAPMessage * );
+DECLSPEC_IMPORT PCHAR     LDAPAPI WLDAP32$ldap_first_attribute ( LDAP *, LDAPMessage *, BerElement ** );
+DECLSPEC_IMPORT LDAPMessage * LDAPAPI WLDAP32$ldap_first_entry ( LDAP *, LDAPMessage * );
+DECLSPEC_IMPORT ULONG     LDAPAPI WLDAP32$ldap_get_next_page_s ( LDAP *, PLDAPSearch, struct l_timeval *, ULONG, ULONG *, LDAPMessage ** );
+DECLSPEC_IMPORT PCHAR *   LDAPAPI WLDAP32$ldap_get_values ( LDAP *, LDAPMessage *, PSTR );
+DECLSPEC_IMPORT struct berval ** LDAPAPI WLDAP32$ldap_get_values_lenA ( LDAP *, LDAPMessage *, PSTR );
+DECLSPEC_IMPORT LDAP *    LDAPAPI WLDAP32$ldap_init ( PSTR, ULONG );
+DECLSPEC_IMPORT LDAPMessage * LDAPAPI WLDAP32$ldap_next_entry ( LDAP *, LDAPMessage * );
+DECLSPEC_IMPORT PLDAPSearch LDAPAPI WLDAP32$ldap_search_init_pageA ( PLDAP, const PSTR, ULONG, const PSTR, PZPSTR, ULONG, PLDAPControlA *, PLDAPControlA *, ULONG, ULONG, PLDAPSortKeyA * );
+DECLSPEC_IMPORT ULONG     LDAPAPI WLDAP32$ldap_set_optionW ( LDAP *, int, const void * );
+DECLSPEC_IMPORT ULONG     LDAPAPI WLDAP32$ldap_unbind ( LDAP * );
+DECLSPEC_IMPORT ULONG     LDAPAPI WLDAP32$ldap_value_free ( PCHAR * );
+DECLSPEC_IMPORT ULONG     LDAPAPI WLDAP32$ldap_value_free_len ( struct berval ** );
 
 DECLSPEC_IMPORT int       WSAAPI WS2_32$bind ( SOCKET, const struct sockaddr *, int );
 DECLSPEC_IMPORT int       WSAAPI WS2_32$closesocket ( SOCKET );
@@ -439,6 +453,188 @@ ULONG LDAPAPI _ldap_bind_s ( LDAP * ld, const PSTR dn, const PCHAR cred, ULONG m
     call.args [ 1 ] = spoof_arg ( dn );
     call.args [ 2 ] = spoof_arg ( cred );
     call.args [ 3 ] = spoof_arg ( method );
+
+    return ( ULONG ) spoof_call ( &call );
+}
+
+void LDAPAPI _ber_free ( BerElement * pBerElement, int fbuf )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WLDAP32$ber_free );
+    call.argc       = 2;
+    call.args [ 0 ] = spoof_arg ( pBerElement );
+    call.args [ 1 ] = spoof_arg ( fbuf );
+
+    spoof_call ( &call );
+}
+
+ULONG LDAPAPI _ldap_count_entries ( LDAP * ld, LDAPMessage * res )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WLDAP32$ldap_count_entries );
+    call.argc       = 2;
+    call.args [ 0 ] = spoof_arg ( ld );
+    call.args [ 1 ] = spoof_arg ( res );
+
+    return ( ULONG ) spoof_call ( &call );
+}
+
+PCHAR LDAPAPI _ldap_first_attribute ( LDAP * ld, LDAPMessage * entry, BerElement ** ptr )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WLDAP32$ldap_first_attribute );
+    call.argc       = 3;
+    call.args [ 0 ] = spoof_arg ( ld );
+    call.args [ 1 ] = spoof_arg ( entry );
+    call.args [ 2 ] = spoof_arg ( ptr );
+
+    return ( PCHAR ) spoof_call ( &call );
+}
+
+LDAPMessage * LDAPAPI _ldap_first_entry ( LDAP * ld, LDAPMessage * res )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WLDAP32$ldap_first_entry );
+    call.argc       = 2;
+    call.args [ 0 ] = spoof_arg ( ld );
+    call.args [ 1 ] = spoof_arg ( res );
+
+    return ( LDAPMessage * ) spoof_call ( &call );
+}
+
+ULONG LDAPAPI _ldap_get_next_page_s ( LDAP * ExternalHandle, PLDAPSearch SearchHandle, struct l_timeval * timeout, ULONG SizeLimit, ULONG * TotalCount, LDAPMessage ** Results )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WLDAP32$ldap_get_next_page_s );
+    call.argc       = 6;
+    call.args [ 0 ] = spoof_arg ( ExternalHandle );
+    call.args [ 1 ] = spoof_arg ( SearchHandle );
+    call.args [ 2 ] = spoof_arg ( timeout );
+    call.args [ 3 ] = spoof_arg ( SizeLimit );
+    call.args [ 4 ] = spoof_arg ( TotalCount );
+    call.args [ 5 ] = spoof_arg ( Results );
+
+    return ( ULONG ) spoof_call ( &call );
+}
+
+PCHAR * LDAPAPI _ldap_get_values ( LDAP * ld, LDAPMessage * entry, PSTR attr )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WLDAP32$ldap_get_values );
+    call.argc       = 3;
+    call.args [ 0 ] = spoof_arg ( ld );
+    call.args [ 1 ] = spoof_arg ( entry );
+    call.args [ 2 ] = spoof_arg ( attr );
+
+    return ( PCHAR * ) spoof_call ( &call );
+}
+
+struct berval ** LDAPAPI _ldap_get_values_lenA ( LDAP * ExternalHandle, LDAPMessage * Message, PSTR attr )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WLDAP32$ldap_get_values_lenA );
+    call.argc       = 3;
+    call.args [ 0 ] = spoof_arg ( ExternalHandle );
+    call.args [ 1 ] = spoof_arg ( Message );
+    call.args [ 2 ] = spoof_arg ( attr );
+
+    return ( struct berval ** ) spoof_call ( &call );
+}
+
+LDAP * LDAPAPI _ldap_init ( PSTR HostName, ULONG PortNumber )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WLDAP32$ldap_init );
+    call.argc       = 2;
+    call.args [ 0 ] = spoof_arg ( HostName );
+    call.args [ 1 ] = spoof_arg ( PortNumber );
+
+    return ( LDAP * ) spoof_call ( &call );
+}
+
+LDAPMessage * LDAPAPI _ldap_next_entry ( LDAP * ld, LDAPMessage * entry )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WLDAP32$ldap_next_entry );
+    call.argc       = 2;
+    call.args [ 0 ] = spoof_arg ( ld );
+    call.args [ 1 ] = spoof_arg ( entry );
+
+    return ( LDAPMessage * ) spoof_call ( &call );
+}
+
+PLDAPSearch LDAPAPI _ldap_search_init_pageA ( PLDAP ExternalHandle, const PSTR DistinguishedName, ULONG ScopeOfSearch, const PSTR SearchFilter, PZPSTR AttributeList, ULONG AttributesOnly, PLDAPControlA * ServerControls, PLDAPControlA * ClientControls, ULONG PageTimeLimit, ULONG TotalSizeLimit, PLDAPSortKeyA * SortKeys )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr         = ( PVOID ) ( WLDAP32$ldap_search_init_pageA );
+    call.argc        = 11;
+    call.args [ 0 ]  = spoof_arg ( ExternalHandle );
+    call.args [ 1 ]  = spoof_arg ( DistinguishedName );
+    call.args [ 2 ]  = spoof_arg ( ScopeOfSearch );
+    call.args [ 3 ]  = spoof_arg ( SearchFilter );
+    call.args [ 4 ]  = spoof_arg ( AttributeList );
+    call.args [ 5 ]  = spoof_arg ( AttributesOnly );
+    call.args [ 6 ]  = spoof_arg ( ServerControls );
+    call.args [ 7 ]  = spoof_arg ( ClientControls );
+    call.args [ 8 ]  = spoof_arg ( PageTimeLimit );
+    call.args [ 9 ]  = spoof_arg ( TotalSizeLimit );
+    call.args [ 10 ] = spoof_arg ( SortKeys );
+
+    return ( PLDAPSearch ) spoof_call ( &call );
+}
+
+ULONG LDAPAPI _ldap_set_optionW ( LDAP * ld, int option, const void * invalue )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WLDAP32$ldap_set_optionW );
+    call.argc       = 3;
+    call.args [ 0 ] = spoof_arg ( ld );
+    call.args [ 1 ] = spoof_arg ( option );
+    call.args [ 2 ] = spoof_arg ( invalue );
+
+    return ( ULONG ) spoof_call ( &call );
+}
+
+ULONG LDAPAPI _ldap_unbind ( LDAP * ld )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WLDAP32$ldap_unbind );
+    call.argc       = 1;
+    call.args [ 0 ] = spoof_arg ( ld );
+
+    return ( ULONG ) spoof_call ( &call );
+}
+
+ULONG LDAPAPI _ldap_value_free ( PCHAR * vals )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WLDAP32$ldap_value_free );
+    call.argc       = 1;
+    call.args [ 0 ] = spoof_arg ( vals );
+
+    return ( ULONG ) spoof_call ( &call );
+}
+
+ULONG LDAPAPI _ldap_value_free_len ( struct berval ** vals )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WLDAP32$ldap_value_free_len );
+    call.argc       = 1;
+    call.args [ 0 ] = spoof_arg ( vals );
 
     return ( ULONG ) spoof_call ( &call );
 }

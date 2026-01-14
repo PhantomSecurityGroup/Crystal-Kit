@@ -65,7 +65,21 @@ x64:
     addhook "OLE32$CoCreateInstance"      "_CoCreateInstance"
     
     # Custom adds
-    addhook "WLDAP32$ldap_bind_s"     "_ldap_bind_s"
+    #addhook "WLDAP32$ber_free"                                              "_ber_free"
+    addhook "WLDAP32$ldap_bind_s"                                           "_ldap_bind_s"
+    #addhook "WLDAP32$ldap_count_entries"                                    "_ldap_count_entries"
+    #addhook "WLDAP32$ldap_first_attribute"                                  "_ldap_first_attribute"
+    #addhook "WLDAP32$ldap_first_entry"                                      "_ldap_first_entry"
+    #addhook "WLDAP32$ldap_get_next_page_s"                                  "_ldap_get_next_page_s"
+    #addhook "WLDAP32$ldap_get_values"                                       "_ldap_get_values"
+    #addhook "WLDAP32$ldap_get_values_lenA"                                  "_ldap_get_values_lenA"
+    #addhook "WLDAP32$ldap_init"                                             "_ldap_init"
+    #addhook "WLDAP32$ldap_next_entry"                                       "_ldap_next_entry"
+    #addhook "WLDAP32$ldap_search_init_pageA"                                "_ldap_search_init_pageA"
+    #addhook "WLDAP32$ldap_set_optionW"                                      "_ldap_set_optionW"
+    #addhook "WLDAP32$ldap_unbind"                                           "_ldap_unbind"
+    #addhook "WLDAP32$ldap_value_free"                                       "_ldap_value_free"
+    #addhook "WLDAP32$ldap_value_free_len"                                   "_ldap_value_free_len"
     addhook "WS2_32$bind"                                                   "_bind"
     addhook "WS2_32$closesocket"                                            "_closesocket"
     addhook "WS2_32$connect"                                                "_connect"
@@ -75,7 +89,7 @@ x64:
     addhook "WS2_32$select"                                                 "_select"
     addhook "WS2_32$send"                                                   "_send"
     addhook "WS2_32$socket"                                                 "_socket"
-    addhook "WSOCK32$inet_addr"                                             "_inet_addr"
+    addhook "WSOCK32$inet_addr"                                     "_inet_addr"
     
 
     # hook functions in pico
