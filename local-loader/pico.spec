@@ -63,6 +63,9 @@ x64:
     addhook "KERNEL32$VirtualQuery"       "_VirtualQuery"
     addhook "KERNEL32$WriteProcessMemory" "_WriteProcessMemory"
     addhook "OLE32$CoCreateInstance"      "_CoCreateInstance"
+    
+    # Custom adds
+    addhook "WLDAP32$ldap_bind_s"     "_ldap_bind_s"
 
     # hook functions in pico
     attach "KERNEL32$VirtualProtect" "_VirtualProtect"  # this is needed to hook VirtualProtect in mask.c

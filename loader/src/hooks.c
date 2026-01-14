@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <winldap.h>
 #include <wininet.h>
 #include <combaseapi.h>
 #include "tcg.h"
@@ -32,6 +33,8 @@ DECLSPEC_IMPORT SIZE_T    WINAPI KERNEL32$VirtualQuery       ( LPCVOID, PMEMORY_
 DECLSPEC_IMPORT BOOL      WINAPI KERNEL32$WriteProcessMemory ( HANDLE, LPVOID, LPCVOID, SIZE_T, SIZE_T * );
 DECLSPEC_IMPORT HRESULT   WINAPI OLE32$CoCreateInstance      ( REFCLSID, LPUNKNOWN, DWORD, REFIID, LPVOID * );
 DECLSPEC_IMPORT ULONG     NTAPI  NTDLL$NtContinue            ( CONTEXT *, BOOLEAN );
+
+DECLSPEC_IMPORT ULONG LDAPAPI WLDAP32$ldap_bind_s ( LDAP *, const PSTR, const PCHAR, ULONG );
 
 HINTERNET WINAPI _InternetOpenA ( LPCSTR lpszAgent, DWORD dwAccessType, LPCSTR lpszProxy, LPCSTR lpszProxyBypass, DWORD dwFlags )
 {
@@ -411,4 +414,18 @@ BOOL WINAPI _WriteProcessMemory ( HANDLE hProcess, LPVOID lpBaseAddress, LPCVOID
     call.args [ 4 ] = spoof_arg ( lpNumberOfBytesWritten );
 
     return ( BOOL ) spoof_call ( &call );
+}
+
+ULONG LDAPAPI _ldap_bind_s ( LDAP * ld, const PSTR dn, const PCHAR cred, ULONG method )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WLDAP32$ldap_bind_s );
+    call.argc       = 4;
+    call.args [ 0 ] = spoof_arg ( ld );
+    call.args [ 1 ] = spoof_arg ( dn );
+    call.args [ 2 ] = spoof_arg ( cred );
+    call.args [ 3 ] = spoof_arg ( method );
+
+    return ( ULONG ) spoof_call ( &call );
 }
