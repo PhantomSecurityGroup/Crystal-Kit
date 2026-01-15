@@ -7,6 +7,7 @@
 #include <combaseapi.h>
 #define SECURITY_WIN32
 #include <security.h>
+#include <ntsecapi.h>
 #include "tcg.h"
 #include "memory.h"
 #include "spoof.h"
@@ -40,63 +41,26 @@ DECLSPEC_IMPORT BOOL      WINAPI KERNEL32$WriteProcessMemory ( HANDLE, LPVOID, L
 DECLSPEC_IMPORT HRESULT   WINAPI OLE32$CoCreateInstance      ( REFCLSID, LPUNKNOWN, DWORD, REFIID, LPVOID * );
 DECLSPEC_IMPORT ULONG     NTAPI  NTDLL$NtContinue            ( CONTEXT *, BOOLEAN );
 
-// functions build only for ldap_bind_s and ldap_init so far
-DECLSPEC_IMPORT ULONG LDAPAPI WLDAP32$ldap_bind_s ( LDAP *, const PSTR, const PCHAR, ULONG );
-DECLSPEC_IMPORT LDAP *LDAPAPI WLDAP32$ldap_init ( PSTR, ULONG );
-DECLSPEC_IMPORT ULONG LDAPAPI WLDAP32$ldap_count_entries ( LDAP *, LDAPMessage * );
-DECLSPEC_IMPORT PCHAR LDAPAPI WLDAP32$ldap_first_attribute ( LDAP *, LDAPMessage *, BerElement ** );
-DECLSPEC_IMPORT LDAPMessage *LDAPAPI WLDAP32$ldap_first_entry ( LDAP *, LDAPMessage * );
-DECLSPEC_IMPORT ULONG LDAPAPI WLDAP32$ldap_get_next_page_s ( PLDAP *, PLDAPSearch, LDAP_TIMEVAL *, ULONG, ULONG *, LDAPMessage ** );
+// Custom added hooks
+DECLSPEC_IMPORT int             WSAAPI WS2_32$bind ( SOCKET, const struct sockaddr *, int );
+DECLSPEC_IMPORT int             WSAAPI WS2_32$connect ( SOCKET, const struct sockaddr *, int );
+DECLSPEC_IMPORT int             WSAAPI WS2_32$getaddrinfo ( const char *, const char *, const struct addrinfo *, struct addrinfo ** );
+DECLSPEC_IMPORT int             WSAAPI WS2_32$send ( SOCKET, const char *, int, int );
+DECLSPEC_IMPORT SOCKET          WSAAPI WS2_32$socket ( int, int, int );
+DECLSPEC_IMPORT BOOL            WINAPI ADVAPI32$OpenProcessToken ( HANDLE, DWORD, PHANDLE );
+DECLSPEC_IMPORT BOOL            WINAPI ADVAPI32$GetTokenInformation ( HANDLE, TOKEN_INFORMATION_CLASS, LPVOID, DWORD, PDWORD );
+DECLSPEC_IMPORT DWORD           WINAPI KERNEL32$WaitForSingleObject ( HANDLE, DWORD );
+DECLSPEC_IMPORT HANDLE          WINAPI KERNEL32$GetCurrentThread ( VOID );
+DECLSPEC_IMPORT HANDLE          WINAPI KERNEL32$GetCurrentProcess ( VOID );
+DECLSPEC_IMPORT HINSTANCE       WINAPI SHELL32$ShellExecuteA ( HWND, LPCSTR, LPCSTR, LPCSTR, LPCSTR, INT );
+DECLSPEC_IMPORT PLDAPSearch     LDAPAPI WLDAP32$ldap_search_init_pageA ( PLDAP, const PSTR, ULONG, const PSTR, PZPSTR, ULONG, PLDAPControlA *, PLDAPControlA *, ULONG, ULONG, PLDAPSortKeyA * );
+DECLSPEC_IMPORT ULONG LDAPAPI   WLDAP32$ldap_bind_s ( LDAP *, const PSTR, const PCHAR, ULONG );
+DECLSPEC_IMPORT LDAP *LDAPAPI   WLDAP32$ldap_init ( PSTR, ULONG );
 
-DECLSPEC_IMPORT PCHAR *LDAPAPI WLDAP32$ldap_get_values ( LDAP *, LDAPMessage *, const PSTR );
-/*
-DECLSPEC_IMPORT BERVAL **LDAPAPI WLDAP32$ldap_get_values_lenA ( LDAP *, LDAPMessage *, const PSTR );
-DECLSPEC_IMPORT LDAPMessage *LDAPAPI WLDAP32$ldap_next_entry ( LDAP *, LDAPMessage * );
-DECLSPEC_IMPORT PLDAPSearch LDAPAPI WLDAP32$ldap_search_init_pageA ( PLDAP, const PSTR, ULONG, const PSTR, PZPSTR, ULONG, PLDAPControlA *, PLDAPControlA *, ULONG, ULONG, PLDAPSortKeyA * );
-DECLSPEC_IMPORT ULONG LDAPAPI WLDAP32$ldap_set_optionW ( LDAP *, int, const void * );
-DECLSPEC_IMPORT ULONG LDAPAPI WLDAP32$ldap_unbind ( LDAP * );
-DECLSPEC_IMPORT ULONG LDAPAPI WLDAP32$ldap_value_free ( PCHAR * );
-DECLSPEC_IMPORT ULONG LDAPAPI WLDAP32$ldap_value_free_len ( BERVAL ** );
-*/
+// Have not been implemented as functions yet and have not yet #include the right header for types
+DECLSPEC_IMPORT NTSTATUS        NTAPI SECUR32$LsaRegisterLogonProcess ( PLSA_STRING, PHANDLE, PLSA_OPERATIONAL_MODE );
+DECLSPEC_IMPORT NTSTATUS        NTAPI SECUR32$LsaConnectUntrusted ( PHANDLE );
 
-
-// functions built for these: WS2_32
-DECLSPEC_IMPORT int       WSAAPI WS2_32$bind ( SOCKET, const struct sockaddr *, int );
-DECLSPEC_IMPORT int       WSAAPI WS2_32$closesocket ( SOCKET );
-DECLSPEC_IMPORT int       WSAAPI WS2_32$connect ( SOCKET, const struct sockaddr *, int );
-DECLSPEC_IMPORT int       WSAAPI WS2_32$getaddrinfo ( const char *, const char *, const struct addrinfo *, struct addrinfo ** );
-DECLSPEC_IMPORT int       WSAAPI WS2_32$ioctlsocket ( SOCKET, long, u_long * );
-DECLSPEC_IMPORT int       WSAAPI WS2_32$listen ( SOCKET, int );
-DECLSPEC_IMPORT int       WSAAPI WS2_32$select ( int, fd_set *, fd_set *, fd_set *, const struct timeval * );
-DECLSPEC_IMPORT int       WSAAPI WS2_32$send ( SOCKET, const char *, int, int );
-DECLSPEC_IMPORT SOCKET    WSAAPI WS2_32$socket ( int, int, int );
-DECLSPEC_IMPORT unsigned long WSAAPI WSOCK32$inet_addr ( const char * );
-
-/*
-DECLSPEC_IMPORT BOOL  WINAPI ADVAPI32$ConvertSecurityDescriptorToStringSecurityDescriptorW ( PSECURITY_DESCRIPTOR, DWORD, SECURITY_INFORMATION, LPWSTR *, PULONG );
-DECLSPEC_IMPORT BOOL  WINAPI ADVAPI32$ConvertSidToStringSidA ( PSID, LPSTR * );
-DECLSPEC_IMPORT BOOL  WINAPI ADVAPI32$GetTokenInformation ( HANDLE, TOKEN_INFORMATION_CLASS, LPVOID, DWORD, PDWORD );
-DECLSPEC_IMPORT BOOL  WINAPI ADVAPI32$InitializeSecurityDescriptor ( PSECURITY_DESCRIPTOR, DWORD );
-DECLSPEC_IMPORT BOOL  WINAPI ADVAPI32$LookupAccountSidA ( LPCSTR, PSID, LPSTR, LPDWORD, LPSTR, LPDWORD, PSID_NAME_USE );
-DECLSPEC_IMPORT BOOL  WINAPI ADVAPI32$LookupAccountSidW ( LPCWSTR, PSID, LPWSTR, LPDWORD, LPWSTR, LPDWORD, PSID_NAME_USE );
-DECLSPEC_IMPORT BOOL  WINAPI ADVAPI32$LookupPrivilegeDisplayNameA ( LPCSTR, LPCSTR, LPSTR, LPDWORD, LPDWORD );
-DECLSPEC_IMPORT BOOL  WINAPI ADVAPI32$LookupPrivilegeNameA ( LPCSTR, PLUID, LPSTR, LPDWORD );
-DECLSPEC_IMPORT BOOL  WINAPI ADVAPI32$OpenProcessToken ( HANDLE, DWORD, PHANDLE );
-*/
-//DECLSPEC_IMPORT ULONG WINAPI IPHLPAPI$GetAdaptersInfo ( PIP_ADAPTER_INFO, PULONG );
-//DECLSPEC_IMPORT DWORD WINAPI IPHLPAPI$GetNetworkParams ( PFIXED_INFO, PULONG );
-
-//DECLSPEC_IMPORT BOOL  WINAPI KERNEL32$FileTimeToLocalFileTime ( const FILETIME *, LPFILETIME );
-//DECLSPEC_IMPORT BOOL  WINAPI KERNEL32$FileTimeToSystemTime ( const FILETIME *, LPSYSTEMTIME );
-//DECLSPEC_IMPORT BOOL  WINAPI KERNEL32$FreeEnvironmentStringsA ( LPCH );
-//DECLSPEC_IMPORT int   WINAPI KERNEL32$GetDateFormatW ( LCID, DWORD, const SYSTEMTIME *, LPCWSTR, LPWSTR, int );
-//DECLSPEC_IMPORT VOID  WINAPI KERNEL32$GetSystemTimeAsFileTime ( LPFILETIME );
-//DECLSPEC_IMPORT DWORD WINAPI KERNEL32$WaitForSingleObject ( HANDLE, DWORD );
-//DECLSPEC_IMPORT int   WINAPI KERNEL32$WideCharToMultiByte ( UINT, DWORD, LPCWCH, int, LPSTR, int, LPCSTR, LPBOOL );
-
-//DECLSPEC_IMPORT HINSTANCE WINAPI SHELL32$ShellExecuteA ( HWND, LPCSTR, LPCSTR, LPCSTR, LPCSTR, INT );
-
-//DECLSPEC_IMPORT BOOLEAN WINAPI SECUR32$GetUserNameExA ( EXTENDED_NAME_FORMAT, LPSTR, PULONG );
 
 HINTERNET WINAPI _InternetOpenA ( LPCSTR lpszAgent, DWORD dwAccessType, LPCSTR lpszProxy, LPCSTR lpszProxyBypass, DWORD dwFlags )
 {
@@ -518,29 +482,6 @@ int WSAAPI _bind ( SOCKET s, const struct sockaddr * name, int namelen )
     return ( int ) spoof_call ( &call );
 }
 
-int WSAAPI _closesocket ( SOCKET s )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) ( WS2_32$closesocket );
-    call.argc       = 1;
-    call.args [ 0 ] = spoof_arg ( s );
-
-    return ( int ) spoof_call ( &call );
-}
-
-int WSAAPI _listen ( SOCKET s, int backlog )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) ( WS2_32$listen );
-    call.argc       = 2;
-    call.args [ 0 ] = spoof_arg ( s );
-    call.args [ 1 ] = spoof_arg ( backlog );
-
-    return ( int ) spoof_call ( &call );
-}
-
 int WSAAPI _send ( SOCKET s, const char * buf, int len, int flags )
 {
     FUNCTION_CALL call = { 0 };
@@ -568,108 +509,6 @@ SOCKET WSAAPI _socket ( int af, int type, int protocol )
     return ( SOCKET ) spoof_call ( &call );
 }
 
-unsigned long WSAAPI _inet_addr ( const char * cp )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) ( WSOCK32$inet_addr );
-    call.argc       = 1;
-    call.args [ 0 ] = spoof_arg ( cp );
-
-    return ( unsigned long ) spoof_call ( &call );
-}
-
-ULONG LDAPAPI _ldap_count_entries ( LDAP * ld, LDAPMessage * res )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) WLDAP32$ldap_count_entries;
-    call.argc       = 2;
-    call.args [ 0 ] = spoof_arg ( ld );
-    call.args [ 1 ] = spoof_arg ( res );
-
-    return ( ULONG ) spoof_call ( &call );
-}
-
-PCHAR LDAPAPI _ldap_first_attribute ( LDAP * ld, LDAPMessage * entry, BerElement ** ptr )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) WLDAP32$ldap_first_attribute;
-    call.argc       = 3;
-    call.args [ 0 ] = spoof_arg ( ld );
-    call.args [ 1 ] = spoof_arg ( entry );
-    call.args [ 2 ] = spoof_arg ( ptr );
-
-    return ( PCHAR ) spoof_call ( &call );
-}
-
-LDAPMessage * LDAPAPI _ldap_first_entry ( LDAP * ld, LDAPMessage * res )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) WLDAP32$ldap_first_entry;
-    call.argc       = 2;
-    call.args [ 0 ] = spoof_arg ( ld );
-    call.args [ 1 ] = spoof_arg ( res );
-
-    return ( LDAPMessage * ) spoof_call ( &call );
-}
-
-ULONG LDAPAPI _ldap_get_next_page_s ( PLDAP * ExternalHandle, PLDAPSearch SearchHandle, LDAP_TIMEVAL * timeout, ULONG SizeLimit, ULONG * TotalCount, LDAPMessage ** Results )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) WLDAP32$ldap_get_next_page_s;
-    call.argc       = 6;
-    call.args [ 0 ] = spoof_arg ( ExternalHandle );
-    call.args [ 1 ] = spoof_arg ( SearchHandle );
-    call.args [ 2 ] = spoof_arg ( timeout );
-    call.args [ 3 ] = spoof_arg ( SizeLimit );
-    call.args [ 4 ] = spoof_arg ( TotalCount );
-    call.args [ 5 ] = spoof_arg ( Results );
-
-    return ( ULONG ) spoof_call ( &call );
-}
-
-PCHAR * LDAPAPI _ldap_get_values ( LDAP * ld, LDAPMessage * entry, const PSTR attr )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) WLDAP32$ldap_get_values;
-    call.argc       = 3;
-    call.args [ 0 ] = spoof_arg ( ld );
-    call.args [ 1 ] = spoof_arg ( entry );
-    call.args [ 2 ] = spoof_arg ( attr );
-
-    return ( PCHAR * ) spoof_call ( &call );
-}
-/*
-BERVAL ** LDAPAPI _ldap_get_values_lenA ( LDAP * ld, LDAPMessage * entry, const PSTR attr )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) WLDAP32$ldap_get_values_lenA;
-    call.argc       = 3;
-    call.args [ 0 ] = spoof_arg ( ld );
-    call.args [ 1 ] = spoof_arg ( entry );
-    call.args [ 2 ] = spoof_arg ( attr );
-
-    return ( BERVAL ** ) spoof_call ( &call );
-}
-
-LDAPMessage * LDAPAPI _ldap_next_entry ( LDAP * ld, LDAPMessage * entry )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) WLDAP32$ldap_next_entry;
-    call.argc       = 2;
-    call.args [ 0 ] = spoof_arg ( ld );
-    call.args [ 1 ] = spoof_arg ( entry );
-
-    return ( LDAPMessage * ) spoof_call ( &call );
-}
-
 PLDAPSearch LDAPAPI _ldap_search_init_pageA ( PLDAP ExternalHandle, const PSTR DistinguishedName, ULONG ScopeOfSearch, const PSTR SearchFilter, PZPSTR AttributeList, ULONG AttributesOnly, PLDAPControlA * ServerControls, PLDAPControlA * ClientControls, ULONG PageTimeLimit, ULONG TotalSizeLimit, PLDAPSortKeyA * SortKeys )
 {
     FUNCTION_CALL call = { 0 };
@@ -690,80 +529,6 @@ PLDAPSearch LDAPAPI _ldap_search_init_pageA ( PLDAP ExternalHandle, const PSTR D
 
     return ( PLDAPSearch ) spoof_call ( &call );
 }
-    
-ULONG LDAPAPI _ldap_set_optionW ( LDAP * ld, int option, const void * invalue )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) WLDAP32$ldap_set_optionW;
-    call.argc       = 3;
-    call.args [ 0 ] = spoof_arg ( ld );
-    call.args [ 1 ] = spoof_arg ( option );
-    call.args [ 2 ] = spoof_arg ( invalue );
-
-    return ( ULONG ) spoof_call ( &call );
-}
-
-ULONG LDAPAPI _ldap_unbind ( LDAP * ld )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) WLDAP32$ldap_unbind;
-    call.argc       = 1;
-    call.args [ 0 ] = spoof_arg ( ld );
-
-    return ( ULONG ) spoof_call ( &call );
-}
-
-ULONG LDAPAPI _ldap_value_free ( PCHAR * vals )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) WLDAP32$ldap_value_free;
-    call.argc       = 1;
-    call.args [ 0 ] = spoof_arg ( vals );
-
-    return ( ULONG ) spoof_call ( &call );
-}
-
-ULONG LDAPAPI _ldap_value_free_len ( BERVAL ** vals )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) WLDAP32$ldap_value_free_len;
-    call.argc       = 1;
-    call.args [ 0 ] = spoof_arg ( vals );
-
-    return ( ULONG ) spoof_call ( &call );
-}
-
-// ADVAPI32 hooks
-BOOL WINAPI _ConvertSecurityDescriptorToStringSecurityDescriptorW ( PSECURITY_DESCRIPTOR SecurityDescriptor, DWORD RequestedStringSDRevision, SECURITY_INFORMATION SecurityInformation, LPWSTR * StringSecurityDescriptor, PULONG StringSecurityDescriptorLen )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) ADVAPI32$ConvertSecurityDescriptorToStringSecurityDescriptorW;
-    call.argc       = 5;
-    call.args [ 0 ] = spoof_arg ( SecurityDescriptor );
-    call.args [ 1 ] = spoof_arg ( RequestedStringSDRevision );
-    call.args [ 2 ] = spoof_arg ( SecurityInformation );
-    call.args [ 3 ] = spoof_arg ( StringSecurityDescriptor );
-    call.args [ 4 ] = spoof_arg ( StringSecurityDescriptorLen );
-
-    return ( BOOL ) spoof_call ( &call );
-}
-
-BOOL WINAPI _ConvertSidToStringSidA ( PSID Sid, LPSTR * StringSid )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) ADVAPI32$ConvertSidToStringSidA;
-    call.argc       = 2;
-    call.args [ 0 ] = spoof_arg ( Sid );
-    call.args [ 1 ] = spoof_arg ( StringSid );
-
-    return ( BOOL ) spoof_call ( &call );
-}
 
 BOOL WINAPI _GetTokenInformation ( HANDLE TokenHandle, TOKEN_INFORMATION_CLASS TokenInformationClass, LPVOID TokenInformation, DWORD TokenInformationLength, PDWORD ReturnLength )
 {
@@ -776,81 +541,6 @@ BOOL WINAPI _GetTokenInformation ( HANDLE TokenHandle, TOKEN_INFORMATION_CLASS T
     call.args [ 2 ] = spoof_arg ( TokenInformation );
     call.args [ 3 ] = spoof_arg ( TokenInformationLength );
     call.args [ 4 ] = spoof_arg ( ReturnLength );
-
-    return ( BOOL ) spoof_call ( &call );
-}
-
-BOOL WINAPI _InitializeSecurityDescriptor ( PSECURITY_DESCRIPTOR pSecurityDescriptor, DWORD dwRevision )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) ADVAPI32$InitializeSecurityDescriptor;
-    call.argc       = 2;
-    call.args [ 0 ] = spoof_arg ( pSecurityDescriptor );
-    call.args [ 1 ] = spoof_arg ( dwRevision );
-
-    return ( BOOL ) spoof_call ( &call );
-}
-
-BOOL WINAPI _LookupAccountSidA ( LPCSTR lpSystemName, PSID Sid, LPSTR Name, LPDWORD cchName, LPSTR ReferencedDomainName, LPDWORD cchReferencedDomainName, PSID_NAME_USE peUse )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) ADVAPI32$LookupAccountSidA;
-    call.argc       = 7;
-    call.args [ 0 ] = spoof_arg ( lpSystemName );
-    call.args [ 1 ] = spoof_arg ( Sid );
-    call.args [ 2 ] = spoof_arg ( Name );
-    call.args [ 3 ] = spoof_arg ( cchName );
-    call.args [ 4 ] = spoof_arg ( ReferencedDomainName );
-    call.args [ 5 ] = spoof_arg ( cchReferencedDomainName );
-    call.args [ 6 ] = spoof_arg ( peUse );
-
-    return ( BOOL ) spoof_call ( &call );
-}
-
-BOOL WINAPI _LookupAccountSidW ( LPCWSTR lpSystemName, PSID Sid, LPWSTR Name, LPDWORD cchName, LPWSTR ReferencedDomainName, LPDWORD cchReferencedDomainName, PSID_NAME_USE peUse )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) ADVAPI32$LookupAccountSidW;
-    call.argc       = 7;
-    call.args [ 0 ] = spoof_arg ( lpSystemName );
-    call.args [ 1 ] = spoof_arg ( Sid );
-    call.args [ 2 ] = spoof_arg ( Name );
-    call.args [ 3 ] = spoof_arg ( cchName );
-    call.args [ 4 ] = spoof_arg ( ReferencedDomainName );
-    call.args [ 5 ] = spoof_arg ( cchReferencedDomainName );
-    call.args [ 6 ] = spoof_arg ( peUse );
-
-    return ( BOOL ) spoof_call ( &call );
-}
-
-BOOL WINAPI _LookupPrivilegeDisplayNameA ( LPCSTR lpSystemName, LPCSTR lpName, LPSTR lpDisplayName, LPDWORD cchDisplayName, LPDWORD lpLanguageId )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) ADVAPI32$LookupPrivilegeDisplayNameA;
-    call.argc       = 5;
-    call.args [ 0 ] = spoof_arg ( lpSystemName );
-    call.args [ 1 ] = spoof_arg ( lpName );
-    call.args [ 2 ] = spoof_arg ( lpDisplayName );
-    call.args [ 3 ] = spoof_arg ( cchDisplayName );
-    call.args [ 4 ] = spoof_arg ( lpLanguageId );
-
-    return ( BOOL ) spoof_call ( &call );
-}
-
-BOOL WINAPI _LookupPrivilegeNameA ( LPCSTR lpSystemName, PLUID lpLuid, LPSTR lpName, LPDWORD cchName )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) ADVAPI32$LookupPrivilegeNameA;
-    call.argc       = 4;
-    call.args [ 0 ] = spoof_arg ( lpSystemName );
-    call.args [ 1 ] = spoof_arg ( lpLuid );
-    call.args [ 2 ] = spoof_arg ( lpName );
-    call.args [ 3 ] = spoof_arg ( cchName );
 
     return ( BOOL ) spoof_call ( &call );
 }
@@ -868,92 +558,24 @@ BOOL WINAPI _OpenProcessToken ( HANDLE ProcessHandle, DWORD DesiredAccess, PHAND
     return ( BOOL ) spoof_call ( &call );
 }
 
-// IPHLPAPI hooks
-ULONG WINAPI _GetAdaptersInfo ( PIP_ADAPTER_INFO AdapterInfo, PULONG SizePointer )
+HANDLE WINAPI _GetCurrentThread ( VOID )
 {
     FUNCTION_CALL call = { 0 };
 
-    call.ptr        = ( PVOID ) IPHLPAPI$GetAdaptersInfo;
-    call.argc       = 2;
-    call.args [ 0 ] = spoof_arg ( AdapterInfo );
-    call.args [ 1 ] = spoof_arg ( SizePointer );
+    call.ptr  = ( PVOID ) KERNEL32$GetCurrentThread;
+    call.argc = 0;
 
-    return ( ULONG ) spoof_call ( &call );
+    return ( HANDLE ) spoof_call ( &call );
 }
 
-DWORD WINAPI _GetNetworkParams ( PFIXED_INFO pFixedInfo, PULONG pOutBufLen )
+HANDLE WINAPI _GetCurrentProcess ( VOID )
 {
     FUNCTION_CALL call = { 0 };
 
-    call.ptr        = ( PVOID ) IPHLPAPI$GetNetworkParams;
-    call.argc       = 2;
-    call.args [ 0 ] = spoof_arg ( pFixedInfo );
-    call.args [ 1 ] = spoof_arg ( pOutBufLen );
+    call.ptr  = ( PVOID ) KERNEL32$GetCurrentProcess;
+    call.argc = 0;
 
-    return ( DWORD ) spoof_call ( &call );
-}
-
-// Additional KERNEL32 hooks
-BOOL WINAPI _FileTimeToLocalFileTime ( const FILETIME * lpFileTime, LPFILETIME lpLocalFileTime )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) KERNEL32$FileTimeToLocalFileTime;
-    call.argc       = 2;
-    call.args [ 0 ] = spoof_arg ( lpFileTime );
-    call.args [ 1 ] = spoof_arg ( lpLocalFileTime );
-
-    return ( BOOL ) spoof_call ( &call );
-}
-
-BOOL WINAPI _FileTimeToSystemTime ( const FILETIME * lpFileTime, LPSYSTEMTIME lpSystemTime )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) KERNEL32$FileTimeToSystemTime;
-    call.argc       = 2;
-    call.args [ 0 ] = spoof_arg ( lpFileTime );
-    call.args [ 1 ] = spoof_arg ( lpSystemTime );
-
-    return ( BOOL ) spoof_call ( &call );
-}
-
-BOOL WINAPI _FreeEnvironmentStringsA ( LPCH penv )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) KERNEL32$FreeEnvironmentStringsA;
-    call.argc       = 1;
-    call.args [ 0 ] = spoof_arg ( penv );
-
-    return ( BOOL ) spoof_call ( &call );
-}
-
-int WINAPI _GetDateFormatW ( LCID Locale, DWORD dwFlags, const SYSTEMTIME * lpDate, LPCWSTR lpFormat, LPWSTR lpDateStr, int cchDate )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) KERNEL32$GetDateFormatW;
-    call.argc       = 6;
-    call.args [ 0 ] = spoof_arg ( Locale );
-    call.args [ 1 ] = spoof_arg ( dwFlags );
-    call.args [ 2 ] = spoof_arg ( lpDate );
-    call.args [ 3 ] = spoof_arg ( lpFormat );
-    call.args [ 4 ] = spoof_arg ( lpDateStr );
-    call.args [ 5 ] = spoof_arg ( cchDate );
-
-    return ( int ) spoof_call ( &call );
-}
-
-VOID WINAPI _GetSystemTimeAsFileTime ( LPFILETIME lpSystemTimeAsFileTime )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) KERNEL32$GetSystemTimeAsFileTime;
-    call.argc       = 1;
-    call.args [ 0 ] = spoof_arg ( lpSystemTimeAsFileTime );
-
-    spoof_call ( &call );
+    return ( HANDLE ) spoof_call ( &call );
 }
 
 DWORD WINAPI _WaitForSingleObject ( HANDLE hHandle, DWORD dwMilliseconds )
@@ -966,24 +588,6 @@ DWORD WINAPI _WaitForSingleObject ( HANDLE hHandle, DWORD dwMilliseconds )
     call.args [ 1 ] = spoof_arg ( dwMilliseconds );
 
     return ( DWORD ) spoof_call ( &call );
-}
-
-int WINAPI _WideCharToMultiByte ( UINT CodePage, DWORD dwFlags, LPCWCH lpWideCharStr, int cchWideChar, LPSTR lpMultiByteStr, int cbMultiByte, LPCSTR lpDefaultChar, LPBOOL lpUsedDefaultChar )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) KERNEL32$WideCharToMultiByte;
-    call.argc       = 8;
-    call.args [ 0 ] = spoof_arg ( CodePage );
-    call.args [ 1 ] = spoof_arg ( dwFlags );
-    call.args [ 2 ] = spoof_arg ( lpWideCharStr );
-    call.args [ 3 ] = spoof_arg ( cchWideChar );
-    call.args [ 4 ] = spoof_arg ( lpMultiByteStr );
-    call.args [ 5 ] = spoof_arg ( cbMultiByte );
-    call.args [ 6 ] = spoof_arg ( lpDefaultChar );
-    call.args [ 7 ] = spoof_arg ( lpUsedDefaultChar );
-
-    return ( int ) spoof_call ( &call );
 }
 
 // SHELL32 hooks
@@ -1004,20 +608,31 @@ HINSTANCE WINAPI _ShellExecuteA ( HWND hwnd, LPCSTR lpOperation, LPCSTR lpFile, 
 }
 
 // SECUR32 hooks
-BOOLEAN SEC_ENTRY _GetUserNameExA ( EXTENDED_NAME_FORMAT NameFormat, LPSTR lpNameBuffer, PULONG nSize )
+NTSTATUS NTAPI _LsaRegisterLogonProcess ( PLSA_STRING LogonProcessName, PHANDLE LsaHandle, PLSA_OPERATIONAL_MODE SecurityMode )
 {
     FUNCTION_CALL call = { 0 };
 
-    call.ptr        = ( PVOID ) SECUR32$GetUserNameExA;
+    call.ptr        = ( PVOID ) SECUR32$LsaRegisterLogonProcess;
     call.argc       = 3;
-    call.args [ 0 ] = spoof_arg ( NameFormat );
-    call.args [ 1 ] = spoof_arg ( lpNameBuffer );
-    call.args [ 2 ] = spoof_arg ( nSize );
+    call.args [ 0 ] = spoof_arg ( LogonProcessName );
+    call.args [ 1 ] = spoof_arg ( LsaHandle );
+    call.args [ 2 ] = spoof_arg ( SecurityMode );
 
-    return ( BOOLEAN ) spoof_call ( &call );
+    return ( NTSTATUS ) spoof_call ( &call );
 }
-*/
 
+NTSTATUS NTAPI _LsaConnectUntrusted ( PHANDLE LsaHandle )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) SECUR32$LsaConnectUntrusted;
+    call.argc       = 1;
+    call.args [ 0 ] = spoof_arg ( LsaHandle );
+
+    return ( NTSTATUS ) spoof_call ( &call );
+}
+
+// WS2_32 hooks
 int WSAAPI _connect ( SOCKET s, const struct sockaddr * name, int namelen )
 {
     FUNCTION_CALL call = { 0 };
@@ -1041,34 +656,6 @@ int WSAAPI _getaddrinfo ( const char * nodename, const char * servname, const st
     call.args [ 1 ] = spoof_arg ( servname );
     call.args [ 2 ] = spoof_arg ( hints );
     call.args [ 3 ] = spoof_arg ( res );
-
-    return ( int ) spoof_call ( &call );
-}
-
-int WSAAPI _ioctlsocket ( SOCKET s, long cmd, u_long * argp )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) ( WS2_32$ioctlsocket );
-    call.argc       = 3;
-    call.args [ 0 ] = spoof_arg ( s );
-    call.args [ 1 ] = spoof_arg ( cmd );
-    call.args [ 2 ] = spoof_arg ( argp );
-
-    return ( int ) spoof_call ( &call );
-}
-
-int WSAAPI _select ( int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, const struct timeval * timeout )
-{
-    FUNCTION_CALL call = { 0 };
-
-    call.ptr        = ( PVOID ) ( WS2_32$select );
-    call.argc       = 5;
-    call.args [ 0 ] = spoof_arg ( nfds );
-    call.args [ 1 ] = spoof_arg ( readfds );
-    call.args [ 2 ] = spoof_arg ( writefds );
-    call.args [ 3 ] = spoof_arg ( exceptfds );
-    call.args [ 4 ] = spoof_arg ( timeout );
 
     return ( int ) spoof_call ( &call );
 }
