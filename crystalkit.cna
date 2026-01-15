@@ -141,6 +141,7 @@ set BEACON_RDLL_SIZE {
 
 set BEACON_RDLL_GENERATE_LOCAL
 {
+    print_info ( "LOCAL BUILD" );
     local ( '$beacon $arch $gmh $gpa $spec_path $spec $hash_map $final' );
 
     $beacon = $2;
@@ -177,6 +178,7 @@ set BEACON_RDLL_GENERATE_LOCAL
 
 set POSTEX_RDLL_GENERATE
 { 
+    print_info ( "POSTEX BUILD" );
     local ( '$dll $postex $arch $gmh $gpa $spec_path $spec $hash_map $final' );
     
     $dll    = $1;
