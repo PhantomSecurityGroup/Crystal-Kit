@@ -37,6 +37,7 @@ x64:
     # hook functions in the DLL
     addhook "WININET$InternetOpenA"       "_InternetOpenA"
     addhook "WININET$InternetConnectA"    "_InternetConnectA"
+    addhook "WININET$HttpSendRequestA"    "_HttpSendRequestA"
     addhook "KERNEL32$CloseHandle"        "_CloseHandle"
     addhook "KERNEL32$CreateFileMappingA" "_CreateFileMappingA"
     addhook "KERNEL32$CreateProcessA"     "_CreateProcessA"

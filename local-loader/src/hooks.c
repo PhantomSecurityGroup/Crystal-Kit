@@ -15,6 +15,7 @@
 
 DECLSPEC_IMPORT HINTERNET WINAPI WININET$InternetConnectA    ( HINTERNET, LPCSTR, INTERNET_PORT, LPCSTR, LPCSTR, DWORD, DWORD, DWORD_PTR );
 DECLSPEC_IMPORT HINTERNET WINAPI WININET$InternetOpenA       ( LPCSTR, DWORD, LPCSTR, LPCSTR, DWORD );
+DECLSPEC_IMPORT HINTERNET WINAPI WININET$HttpSendRequestA    ( HINTERNET, LPCSTR, DWORD, LPVOID, DWORD );
 DECLSPEC_IMPORT BOOL      WINAPI KERNEL32$CloseHandle        ( HANDLE );
 DECLSPEC_IMPORT HANDLE    WINAPI KERNEL32$CreateFileMappingA ( HANDLE, LPSECURITY_ATTRIBUTES, DWORD, DWORD, DWORD, LPCSTR );
 DECLSPEC_IMPORT BOOL      WINAPI KERNEL32$CreateProcessA     ( LPCSTR, LPSTR, LPSECURITY_ATTRIBUTES, LPSECURITY_ATTRIBUTES, BOOL, DWORD, LPVOID, LPCSTR, LPSTARTUPINFOA, LPPROCESS_INFORMATION );
@@ -93,6 +94,21 @@ HINTERNET WINAPI _InternetConnectA ( HINTERNET hInternet, LPCSTR lpszServerName,
     call.args [ 7 ] = spoof_arg ( dwContext );
 
     return ( HINTERNET ) spoof_call ( &call );
+}
+
+BOOL WINAPI _HttpSendRequestA ( HINTERNET hRequest, LPCSTR lpszHeaders, DWORD dwHeadersLength, LPVOID lpOptional, DWORD dwOptionalLength )
+{
+    FUNCTION_CALL call = { 0 };
+
+    call.ptr        = ( PVOID ) ( WININET$HttpSendRequestA );
+    call.argc       = 5;
+    call.args [ 0 ] = spoof_arg ( hRequest );
+    call.args [ 1 ] = spoof_arg ( lpszHeaders );
+    call.args [ 2 ] = spoof_arg ( dwHeadersLength );
+    call.args [ 3 ] = spoof_arg ( lpOptional );
+    call.args [ 4 ] = spoof_arg ( dwOptionalLength );
+
+    return ( BOOL ) spoof_call ( &call );
 }
 
 BOOL WINAPI _CloseHandle ( HANDLE hObject )

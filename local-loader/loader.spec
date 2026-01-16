@@ -27,6 +27,8 @@ x64:
     attach "KERNEL32$VirtualFree"    "_VirtualFree"
     preserve "KERNEL32$LoadLibraryA" "init_frame_info"
 
+    preserve "KERNEL32$LoadLibraryA" "draugr_wrapper"
+
     # mask & link the dll
     generate $MASK 128
     push $DLL

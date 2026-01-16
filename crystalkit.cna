@@ -931,6 +931,7 @@ set POSTEX_RDLL_GENERATE
     $postex = strrep_pad_postex ( $postex, $dll, "resources/screenshot.x64.dll", "JPEG datastream contains no image", "");
     
     $postex = strrep_pad_postex ( $postex, $dll, "resources/invokeassembly.x64.dll", "ICLRMetaHost::GetRuntime", "");
+    $postex = strrep_pad_postex ( $postex, $dll, "resources/invokeassembly.x64.dll", "invokeassembly.x64.dll", "");
     $postex = strrep_pad_postex ( $postex, $dll, "resources/invokeassembly.x64.dll", "failed w/hr 0x", "");
     $postex = strrep_pad_postex ( $postex, $dll, "resources/invokeassembly.x64.dll", ".NET runtime [ver", "");
     $postex = strrep_pad_postex ( $postex, $dll, "resources/invokeassembly.x64.dll", "] cannot be loaded", "");
@@ -953,6 +954,7 @@ set POSTEX_RDLL_GENERATE
     $postex = strrep_pad_postex ( $postex, $dll, "resources/invokeassembly.x64.dll", "bad exception", "");
     
     $postex = strrep_pad_postex ( $postex, $dll, "resources/powershell.x64.dll", "Could not find signature in the", "");
+    $postex = strrep_pad_postex ( $postex, $dll, "resources/powershell.x64.dll", "powershell.x64.dll", "");
     $postex = strrep_pad_postex ( $postex, $dll, "resources/powershell.x64.dll", "Could not fix signature in the", "");
     $postex = strrep_pad_postex ( $postex, $dll, "resources/powershell.x64.dll", "function:", "");
     $postex = strrep_pad_postex ( $postex, $dll, "resources/powershell.x64.dll", "Patch index", "");
