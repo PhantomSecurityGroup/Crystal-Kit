@@ -37,6 +37,7 @@ x64:
     # hook functions in the DLL
     addhook "WININET$InternetOpenA"       "_InternetOpenA"
     addhook "WININET$InternetConnectA"    "_InternetConnectA"
+    addhook "WININET$HttpSendRequestA"    "_HttpSendRequestA"
     addhook "KERNEL32$CloseHandle"        "_CloseHandle"
     addhook "KERNEL32$CreateFileMappingA" "_CreateFileMappingA"
     addhook "KERNEL32$CreateProcessA"     "_CreateProcessA"
@@ -63,6 +64,24 @@ x64:
     addhook "KERNEL32$VirtualQuery"       "_VirtualQuery"
     addhook "KERNEL32$WriteProcessMemory" "_WriteProcessMemory"
     addhook "OLE32$CoCreateInstance"      "_CoCreateInstance"
+
+    # Custom hooks
+    addhook "WLDAP32$ldap_bind_s"                   "_ldap_bind_s"
+    addhook "WLDAP32$ldap_init"                     "_ldap_init"
+    addhook "WLDAP32$ldap_search_init_pageA"        "_ldap_search_init_pageA"
+    addhook "WS2_32$bind"                           "_bind"
+    addhook "WS2_32$connect"                        "_connect"
+    addhook "WS2_32$getaddrinfo"                    "_getaddrinfo"
+    addhook "WS2_32$send"                           "_send"
+    addhook "WS2_32$socket"                         "_socket"
+    addhook "SECUR32$LsaRegisterLogonProcess"       "_LsaRegisterLogonProcess"
+    addhook "SECUR32$LsaConnectUntrusted"           "_LsaConnectUntrusted"
+    addhook "SHELL32$ShellExecuteA"                 "_ShellExecuteA"
+    addhook "ADVAPI32$GetTokenInformation"          "_GetTokenInformation"
+    addhook "ADVAPI32$OpenProcessToken"             "_OpenProcessToken"
+    addhook "KERNEL32$GetCurrentThread"             "_GetCurrentThread"
+    addhook "KERNEL32$GetCurrentProcess"            "_GetCurrentProcess"
+    addhook "KERNEL32$WaitForSingleObject"          "_WaitForSingleObject"
 
     # hook functions in pico
     attach "KERNEL32$VirtualProtect" "_VirtualProtect"  # this is needed to hook VirtualProtect in mask.c

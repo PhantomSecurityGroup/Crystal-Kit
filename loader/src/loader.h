@@ -2,7 +2,7 @@
 
 typedef struct {
     char data [ 4096 ];
-    char code [ 16384 ];
+    char code [ 24576 ];
 } PICO;
 
 typedef struct {
